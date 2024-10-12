@@ -6,4 +6,19 @@
 #### packages to be installed:
 node.js
 
+#### project setup:
+1. `npm install -g vite`
+2. `npm create vite@latest`
+3. `cd file-name`
+4. `npm i`
+5. `npm run dev`
+
+
+
+#### Phase 1:
+1. `npm install --save @webgpu/types`
+2. 
+
+
+
 `npm install -g npm@10.9.0`

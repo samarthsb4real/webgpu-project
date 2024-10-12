@@ -18,6 +18,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    
+    /* To be manually added */
     "typeRoots": ["./node_modules/@webgpu/types"]
   },
   "include": ["src"]
