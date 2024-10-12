@@ -1,22 +1,20 @@
+import shaderSource from "./shaders/shader.wgsl?raw";
+
 class Renderer {
-  private context: GPUCanvasContext | null = null;
-  private device: GPUDevice | null = null;
+  private context!: GPUCanvasContext;
+  private device!: GPUDevice;
 
   public async initialize() {
     const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 
-    if (!canvas) {
-      console.error("Canvas element not found.");
-      return;
-    }
+    this.context = canvas.getContext("webgpu")!;
 
     if (!navigator.gpu) {
-      throw new Error("WebGPU not supported.");
+      throw Error("WebGPU not supported.");
     }
 
-    this.context = canvas.getContext("webgpu");
     if (!this.context) {
-      alert("WebGPU context is not available.");
+      alert("WebGPU not supported");
       return;
     }
 
@@ -25,28 +23,52 @@ class Renderer {
     });
 
     if (!adapter) {
-      alert("No Adapter found.");
+      alert("No Adapter found");
       return;
     }
 
     this.device = await adapter.requestDevice();
-    if (!this.device) {
-      alert("Unable to request GPU device.");
-      return;
-    }
 
     this.context.configure({
       device: this.device,
       format: navigator.gpu.getPreferredCanvasFormat(),
     });
+
+    this.prepareModel();
   }
 
-  public draw() {
-    if (!this.device || !this.context) {
-      console.error("Device or context is not initialized.");
-      return;
-    }
+  private prepareModel() {
+    const shaderModule = this.device.createShaderModule({
+      code: shaderSource,
+    });
 
+    const vertexState: GPUVertexState = {
+      module: shaderModule,
+      entryPoint: "vertexMain",
+      buffers: [],
+    };
+
+    const fragmentState: GPUFragmentState = {
+      module: shaderModule,
+      entryPoint: "fragmentMain",
+      targets: [
+        {
+          format: navigator.gpu.getPreferredCanvasFormat(),
+        },
+      ],
+    };
+
+    this.pipeline = this.device.createRenderPipeline({
+      vertex: vertexState,
+      fragment: fragmentState,
+      primitive: {
+        topology: "triangle-list",
+      },
+      layout: "auto",
+    });
+  }
+
+  public draw(): void {
     const commandEncoder = this.device.createCommandEncoder();
 
     const textureView = this.context.getCurrentTexture().createView();
@@ -55,7 +77,7 @@ class Renderer {
       colorAttachments: [
         {
           view: textureView,
-          clearValue: { r: 0.8, g: 0.8, b: 0.8, a: 1.0 },
+          clearValue: { r: 0.8, g: 0.8, b: 1, a: 1.0 },
           loadOp: "clear",
           storeOp: "store",
         },
@@ -64,7 +86,9 @@ class Renderer {
 
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
 
-    // Todo: draw stuff here
+    //todo: draw stuff here
+    passEncoder.setPipeline(this.pipeline);
+    passEncoder.draw(3);
 
     passEncoder.end();
     this.device.queue.submit([commandEncoder.finish()]);
@@ -72,6 +96,4 @@ class Renderer {
 }
 
 const renderer = new Renderer();
-renderer.initialize().then(() => {
-  renderer.draw();
-});
+renderer.initialize().then(() => renderer.draw());

@@ -5,6 +5,7 @@
 
 #### packages to be installed:
 node.js
+wgsl
 
 #### project setup:
 1. `npm install -g vite`
